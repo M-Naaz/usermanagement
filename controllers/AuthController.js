@@ -32,6 +32,9 @@ const register = async (req, res, next) => {
         role: Joi.string().required().messages({
             'string.empty': `role is required`,
         }),
+        status:Joi.string().required().messages({
+            'string.empty': `role is required`,
+        }),
         profileImage: Joi.string(),
 
     });
@@ -52,9 +55,9 @@ const register = async (req, res, next) => {
         const doesExist = await User.findOne({ email: email })
         if (doesExist) {
             console.log(doesExist)
-            return res.status(httpCodes.INTERNAL_SERVER_ERROR).json({
+            return res.status(httpCodes.BAD_REQUEST).json({
                 ErrorModel: {
-                    errorCode: httpCodes.INTERNAL_SERVER_ERROR,
+                    errorCode: httpCodes.BAD_REQUEST,
                     errorMessage: "email already exist"
 
                 }
@@ -78,12 +81,12 @@ const register = async (req, res, next) => {
                 email: req.body.email,
                 password: hashedPass,
                 profileImage: req.body.profileImage,
-                role: req.body.role
+            
             });
 
 
             let createUser = await user.save()
-            // let createAdmin = await admin.save()
+            
             if (createUser) {
                 console.log(createUser);
                 return res.status(httpCodes.OK).json({
@@ -119,9 +122,9 @@ const login = async (req, res, next) => {
     const user = await User.findOne({ $or: [{ email: username }] })
     if (!user) {
         console.log(user)
-        return res.status(httpCodes.INTERNAL_SERVER_ERROR).json({
+        return res.status(httpCodes.NOT_FOUND).json({
             ErrorModel: {
-                errorCode: httpCodes.INTERNAL_SERVER_ERROR,
+                errorCode: httpCodes.NOT_FOUND,
                 errorMessage: "user not found"
 
             }
@@ -130,7 +133,7 @@ const login = async (req, res, next) => {
 
         let verify = await bcrypt.compare(password, user.password);
         if (verify) {
-            const token = jwt.sign({ name: user.name }, "verySecretiveValue", { expiresIn: "5min" })
+            const token = jwt.sign({ name: user.name }, "verySecretiveValue", { expiresIn: "24hrs" })
             console.log(user);
             return res.status(httpCodes.OK).json({
                 message: "Login successful",
@@ -148,26 +151,7 @@ const login = async (req, res, next) => {
 }
 
 
-//show-admin
-const show = async (req, res, next) => {
-    const id = req.params.id
-    const userInfo = await User.findById(id)
-    if (userInfo) {
-        return res.status(httpCodes.OK).json({
-            data: userInfo,
-            message: "Success"
-        });
-    } else {
-        return res.status(httpCodes.INTERNAL_SERVER_ERROR).json({
-            ErrorModel: {
-                errorCode: httpCodes.INTERNAL_SERVER_ERROR,
-                errorMessage: "failed to fetch user information"
-            }
-        });
-    }
 
-
-}
 
 
 //update
@@ -221,9 +205,9 @@ const update = async (req, res, next) => {
         const doesExist = await User.findOne({ email: email, '_id': { $ne: id } })
         if (doesExist) {
             console.log(error)
-            return res.status(httpCodes.INTERNAL_SERVER_ERROR).json({
+            return res.status(httpCodes.BAD_REQUEST).json({
                 ErrorModel: {
-                    errorCode: httpCodes.INTERNAL_SERVER_ERROR,
+                    errorCode: httpCodes.BAD_REQUEST,
                     errorMessage: "email already exist"
 
                 }
@@ -287,7 +271,7 @@ const remove = async (req, res, next) => {
 
 }
 
-
+//disable-user
 
 //change password
 const change = async (req, res, next) => {

@@ -20,7 +20,7 @@ router.get("/show/:id", authenticate, AuthController.show)
 //admin-delete
 router.delete("/delete/:id", authenticate, AuthController.remove)
 //change-password
-router.patch("/change/:id", authenticate.apply, AuthController.change)
+router.patch("/change/:email", authenticate.apply, AuthController.change)
 
 
 module.exports = router
