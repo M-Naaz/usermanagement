@@ -21,14 +21,15 @@ app.use(bodyParser.json())
 app.use('/uploads', express.static("uploads"))
 
 
-//session
-const session = {
-  secret: process.env.SESSION_SECRET,
-  cookie: {},
-  resave: false,
-  saveUninitialized: false
-};
-app.use(expressSession(session));
+// //session
+// const session = {
+//   // secret: process.env.SESSION_SECRET,
+//   cookie: {},
+//   resave: false,
+//   saveUninitialized: false
+// };
+// app.use(expressSession(session));
+
 //passport.js
 
 app.use(passport.initialize());

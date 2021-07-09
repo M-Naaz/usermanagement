@@ -83,7 +83,7 @@ const register = async (req, res, next) => {
 
 
             let createUser = await user.save()
-            let createAdmin = await admin.save()
+            // let createAdmin = await admin.save()
             if (createUser) {
                 console.log(createUser);
                 return res.status(httpCodes.OK).json({
@@ -174,11 +174,11 @@ const show = async (req, res, next) => {
 const update = async (req, res, next) => {
     const {
         email,
-        phone,
         firstName,
         lastName,
         password,
-        Address
+        role,
+        profileImage
     } = req.body;
     const id = req.params.id
     const updateSchema = Joi.object().keys({
@@ -198,8 +198,8 @@ const update = async (req, res, next) => {
         Address: Joi.string().required().messages({
             'string.empty': `Name is required`,
         }),
-        phone: Joi.string().required().messages({
-            'string.empty': `Enter valid phone number`,
+        role: Joi.string().required().messages({
+            'string.empty': `Enter a role`,
         }),
         profileImage: Joi.string().required().messages({
             'string.empty': 'choose a file',
@@ -243,8 +243,7 @@ const update = async (req, res, next) => {
                 firstName: req.body.firstName,
                 lastName: req.body.lastName,
                 email: req.body.email,
-                phone: req.body.phone,
-                Address: req.body.Address,
+                role:req.body.role,
                 profileImage: req.body.profileImage
             };
             const update = await User.findByIdAndUpdate(id, { $set: updateData })
@@ -289,28 +288,8 @@ const remove = async (req, res, next) => {
 }
 
 
-//disable
-const disable = async (req, res, next) => {
-    const id = req.params.id
-    const userInfo = await User.findByIdAnd(id)
-    if (userInfo) {
-        return res.status(httpCodes.OK).json({
-            data: userInfo,
-            message: "user disabled Successfully"
-        });
-    } else {
-        return res.status(httpCodes.INTERNAL_SERVER_ERROR).json({
-            ErrorModel: {
-                errorCode: httpCodes.INTERNAL_SERVER_ERROR,
-                errorMessage: "unable to disable user"
-            }
-        });
-    }
 
-
-}
-
-// password
+//change password
 const change = async (req, res, next) => {
     const session = req.session;
     if (session.email) {

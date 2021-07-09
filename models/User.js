@@ -30,29 +30,5 @@ const addressSchema = new Schema({
         ref: "User"
     }
 })
-module.exports = mongoose.model("address", addressSchema)
+// module.exports = mongoose.model("address", addressSchema)
 
-// //admin
-// const adminSchema = new Schema({
-
-//     admins: {
-//         _id: mongoose.Schema.Types.ObjectId,
-//         firstName: {
-//             type: String
-//         },
-//         lastName: {
-//             type: String
-//         },
-//         email: {
-//             type: String,
-
-//         },
-//         password: {
-//             type: String,
-
-//         },
-//         users: [userSchema]
-//     }
-// });
-
-// module.exports = mongoose.model("admins", adminSchema)
