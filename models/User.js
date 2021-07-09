@@ -11,8 +11,9 @@ const userSchema = new Schema({
         type: String,
         default: "user",
         enum: ["user", "admin"]
-    }
-   
+    },
+    status: String
+
 }, { timestamps: true })
 module.exports = mongoose.model("users", userSchema)
 
@@ -23,7 +24,7 @@ const addressSchema = new Schema({
     city: String,
     state: String,
     country: String,
-
+    landmark: String,
     user: {
         type: Schema.Types.ObjectId,
         ref: "User"

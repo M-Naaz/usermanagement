@@ -10,7 +10,7 @@ const register = async (req, res, next) => {
     console.log(req.body)
     console.log(req.file)
     // return true;
-    const { email, password, firstName, lastName,  role } = req.body;
+    const { email, password, firstName, lastName, role } = req.body;
     /** Validation */
     const registerSchema = Joi.object().keys({
         email: Joi.string().required().email().messages({
@@ -80,19 +80,7 @@ const register = async (req, res, next) => {
                 profileImage: req.body.profileImage,
                 role: req.body.role
             });
-            // const admin = new User({
-            //     firstName: req.body.firstName,
-            //     lastName: req.body.lastName,
-            //     email: req.body.email,
-               
-            // });
-            // userManagement.User.aggregate({
-            //     $lookup: {
-            //         from: "address", localField: ["address"],
-            //         foreignField: "address", as: "newAddress"
-            //     }
-            // })
-            // //join
+
 
             let createUser = await user.save()
             let createAdmin = await admin.save()
@@ -304,17 +292,17 @@ const remove = async (req, res, next) => {
 //disable
 const disable = async (req, res, next) => {
     const id = req.params.id
-    const userInfo = await User.findByIdAndlo(id)
+    const userInfo = await User.findByIdAnd(id)
     if (userInfo) {
         return res.status(httpCodes.OK).json({
             data: userInfo,
-            message: "user deleted Successfully"
+            message: "user disabled Successfully"
         });
     } else {
         return res.status(httpCodes.INTERNAL_SERVER_ERROR).json({
             ErrorModel: {
                 errorCode: httpCodes.INTERNAL_SERVER_ERROR,
-                errorMessage: "unable to delete user"
+                errorMessage: "unable to disable user"
             }
         });
     }
@@ -322,30 +310,48 @@ const disable = async (req, res, next) => {
 
 }
 
-//change password
+// password
 const change = async (req, res, next) => {
-    const id = req.params.id
-    const userInfo = await User.findOne(id)
-    if (userInfo) {
-        
-        const old_password = req.body.oldpassword;
-        const new_password = req.body.newpassword;
-        const confirm_password = req.body.confirmpassword;
-        return res.status(httpCodes.OK).json({
-            data: userInfo,
-            message: "password has been changed successfully"
-        });
-    } else {
-        return res.status(httpCodes.INTERNAL_SERVER_ERROR).json({
-            ErrorModel: {
-                errorCode: httpCodes.INTERNAL_SERVER_ERROR,
-                errorMessage: "unable to change password"
+    const session = req.session;
+    if (session.email) {
+        const oldPassword = req.body.oldPassword;
+        const newPassword = req.body.newPassword;
+        const confirmPassword = req.body.confirmPassword;
+        userSchema.findOne({ "email": session.email }, (err, user) => {
+            if (user != null) {
+                const hash = user.password;
+                bcrypt.compare(oldPassword, hash, function (err, res) {
+                    if (res) {
+                        //passwords match
+                        if (newPassword == confirmPassword) {
+                            bcrypt.hash(newPassword, 10, function (err, hash) {
+                                user.password = hash;
+                                user.save(function (err, user) {
+                                    if (err)
+                                        return console.error(err);
+                                    message: "password changed Successfully"
+                                });
+                            })
+                        } else {
+                            return res.status(httpCodes.INTERNAL_SERVER_ERROR).json({
+                                ErrorModel: {
+                                    errorCode: httpCodes.INTERNAL_SERVER_ERROR,
+                                    errorMessage: "unable to change password"
+                                }
+                            });
+                        }
+                    }
+                })
             }
-        });
+        })
     }
-
-
 }
+
+
+
+
+
+
 
 
 
@@ -354,12 +360,5 @@ exports.login = login;
 exports.show = show;
 exports.update = update;
 exports.remove = remove;
-
 exports.change = change;
 
- //const admin = await User.find({user: req.user.id}))
- //res.json(asmins);
- //}catch(err){
-     //console.log(err.message);
-    // res.status(500).send("server error");
-// }
