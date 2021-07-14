@@ -3,13 +3,13 @@ const router = express.Router()
 const { upload } = require("../util/upload");
 const authenticate = require("../middleware/authenticate")
 const AuthController = require("../controllers/AuthController");
-
+const adminController = require("../controllers/adminController")
 const singleUpload = upload.single('profileImage');
 //user-register
 router.post("/register-user", [singleUpload], AuthController.register)
 
 //admin-register
-router.post("/register-admin", AuthController.register)
+router.post("/register-admin", adminController.adregister)
 
 //admin-login
 router.post("/login", AuthController.login)

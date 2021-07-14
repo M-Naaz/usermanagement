@@ -1,5 +1,4 @@
 const jwt = require("jsonwebtoken")
-//passport
 const authenticate = (req, res, next) => {
     try {
         const token = req.headers.authorization.split(" ")[1]

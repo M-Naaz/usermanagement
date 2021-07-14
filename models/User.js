@@ -7,12 +7,13 @@ const userSchema = new Schema({
     email: String,
     profileImage: String,
     password: String,
+    status: String,
     role: {
         type: String,
         default: "user",
         enum: ["user", "admin"]
     },
-    status: String
+    
 
 }, { timestamps: true })
 module.exports = mongoose.model("users", userSchema)

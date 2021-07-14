@@ -5,15 +5,11 @@ const Joi = require("joi")
 const httpCodes = require("http-status-codes");
 
 
-//registeruser
-
-const register = async (req, res, next) => {
-    exports.register = register;
+//registeradmin
+const adregister = async (req, res, next) => {
+    exports.adregister = adregister;
     console.log(req.body)
-    console.log(req.file)
-    // return true;
-   
-    const { email, firstName, lastName, password, role, status, profileImage } = req.body;
+    const { email, password, firstName, lastName, role, status } = req.body;
     /** Validation */
     const registerSchema = Joi.object().keys({
         email: Joi.string().required().email().messages({
@@ -29,16 +25,14 @@ const register = async (req, res, next) => {
         lastName: Joi.string().required().messages({
             'string.empty': `lastName is required`,
         }),
-        // address: Joi.string().required().messages({
-        //     'string.empty': `address is required`,
-        // }),
+
         role: Joi.string().required().messages({
             'string.empty': `role is required`,
         }),
         status: Joi.string().required().messages({
             'string.empty': `role is required`,
         }),
-        profileImage: Joi.string(),
+
 
     });
 
@@ -66,40 +60,30 @@ const register = async (req, res, next) => {
                 }
             });
         } else {
-            console.log(req.file)
-            if (req.file == undefined) {
-                res.status(400).send(' Error: No File Selected!');
-            } else {
-                req.body.profileImage = `${req.file.filename}`;
-                userData = {
-                    profileImage: req.body.profileImage
-                };
-            }
+
 
             let hashedPass = await bcrypt.hash(req.body.password, 10);
 
-            const user = new User({
+            const admin = new User({
                 firstName: req.body.firstName,
                 lastName: req.body.lastName,
                 email: req.body.email,
                 password: hashedPass,
-                profileImage: req.body.profileImage,
-
             });
 
 
-            let createUser = await user.save()
+            let createAdmin = await admin.save()
 
-            if (createUser) {
-                console.log(createUser);
+            if (createAdmin) {
+                console.log(createAdmin);
                 return res.status(httpCodes.OK).json({
-                    message: "User created Successfully"
+                    message: "admin created Successfully"
                 });
             } else {
                 return res.status(httpCodes.INTERNAL_SERVER_ERROR).json({
                     ErrorModel: {
                         errorCode: httpCodes.INTERNAL_SERVER_ERROR,
-                        errorMessage: "User not created"
+                        errorMessage: "admin not created"
                     }
                 });
             }
@@ -107,8 +91,7 @@ const register = async (req, res, next) => {
 
     }
 }
-//login-user
-
+//login-admin
 const login = async (req, res, next) => {
     exports.login = login;
     const { username, password } = req.body;
@@ -123,23 +106,23 @@ const login = async (req, res, next) => {
     });
     const result = await loginSchema.validateAsync(req.body)
 
-    //user not found
-    const user = await User.findOne({ $or: [{ email: username }] })
-    if (!user) {
-        console.log(user)
+    //admin not found
+    const admin = await User.findOne({ $or: [{ email: username }] })
+    if (!admin) {
+        console.log(admin)
         return res.status(httpCodes.NOT_FOUND).json({
             ErrorModel: {
                 errorCode: httpCodes.NOT_FOUND,
-                errorMessage: "user not found"
+                errorMessage: "admin not found"
 
             }
         });
     } else {
 
-        let verify = await bcrypt.compare(password, user.password);
+        let verify = await bcrypt.compare(password, admin.password);
         if (verify) {
-            const token = jwt.sign({ name: user.id }, "verySecretiveValue", { expiresIn: "24hrs" })
-            console.log(user);
+            const token = jwt.sign({ name: admin.id }, "verySecretiveValue", { expiresIn: "24hrs" })
+            console.log(admin);
             return res.status(httpCodes.OK).json({
                 message: "Login successful",
                 token
@@ -157,28 +140,30 @@ const login = async (req, res, next) => {
 
 //delete-admin
 
-const remove = async (req, res, next) => {
-    exports.remove = remove;
+const adremove = async (req, res, next) => {
+    exports.adremove = adremove;
     const id = req.params.id
-    const userInfo = await User.findByIdAndDelete(id)
-    if (userInfo) {
+    const adminInfo = await User.findByIdAndDelete(id)
+    if (adminInfo) {
         return res.status(httpCodes.OK).json({
-            data: userInfo,
-            message: "user deleted Successfully"
+            data: adminInfo,
+            message: "admin deleted Successfully"
         });
     } else {
         return res.status(httpCodes.INTERNAL_SERVER_ERROR).json({
             ErrorModel: {
                 errorCode: httpCodes.INTERNAL_SERVER_ERROR,
-                errorMessage: "unable to delete user"
+                errorMessage: "unable to delete admin"
             }
         });
     }
+
+
 }
 
-// //disable-user
-const disableUser = async (req, res, next) => {
-    exports.disableUser = disableUser;
+//disable-admin
+const disableAdmin = async (req, res, next) => {
+    exports.disableAdmin = disableAdmin;
     const id =  req.params.id 
     const disable = await User.findByIdAndUpdate({ _id: req.params._id }, { active: false })
     if (disable) {
@@ -191,13 +176,13 @@ const disableUser = async (req, res, next) => {
         if (disableUser) {
             return res.status(httpCodes.OK).json({
                 data: disableUser,
-                message: "user disabled Successfully"
+                message: "admin disabled Successfully"
             });
         } else {
             return res.status(httpCodes.INTERNAL_SERVER_ERROR).json({
                 ErrorModel: {
                     errorCode: httpCodes.INTERNAL_SERVER_ERROR,
-                    errorMessage: "unable to disable user"
+                    errorMessage: "unable to disable admin"
                 }
             });
         }
@@ -205,41 +190,18 @@ const disableUser = async (req, res, next) => {
 }
 
 
-//change password
-const change = async (req, res, next) => {
-    exports.change = change;
-    const session = req.session;
-    if (session.email) {
-        const oldPassword = req.body.oldPassword;
-        const newPassword = req.body.newPassword;
-        const confirmPassword = req.body.confirmPassword;
-        userSchema.findOne({ "email": session.email }, (err, user) => {
-            if (user != null) {
-                const hash = user.password;
-                bcrypt.compare(oldPassword, hash, function (err, res) {
-                    if (res) {
-                        //passwords match
-                        if (newPassword == confirmPassword) {
-                            bcrypt.hash(newPassword, 10, function (err, hash) {
-                                user.password = hash;
-                                user.save(function (err, user) {
-                                    if (err)
-                                        return res.status(httpCodes.OK).json({
-                                            message: "password changed Successfully"
-                                        });
-                                })
-                            })
-                        } else {
-                            return res.status(httpCodes.INTERNAL_SERVER_ERROR).json({
-                                ErrorModel: {
-                                    errorCode: httpCodes.INTERNAL_SERVER_ERROR,
-                                    errorMessage: "unable to change password"
-                                }
-                            });
-                        }
-                    }
-                })
-            }
-        })
-    }
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
