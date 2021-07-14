@@ -155,7 +155,114 @@ const login = async (req, res, next) => {
     }
 }
 
-//delete-admin
+
+
+
+
+//update-user
+
+const update = async (req, res, next) => {
+    exports.update = update;
+    const {
+        email,
+        firstName,
+        lastName,
+        password,
+        role,
+        status
+        
+    } = req.body;
+    const id = req.params.id
+    const updateSchema = Joi.object().keys({
+        email: Joi.string().required().email().messages({
+            'string.empty': `Email is required`,
+            'string.email': `Email is incorrect`,
+        }),
+        password: Joi.string().required().messages({
+            'string.empty': `Password is required`,
+        }),
+        firstName: Joi.string().required().messages({
+            'string.empty': `Name is required`,
+        }),
+        lastName: Joi.string().required().messages({
+            'string.empty': `Name is required`,
+        }),
+        Address: Joi.string().required().messages({
+            'string.empty': `Name is required`,
+        }),
+        role: Joi.string().required().messages({
+            'string.empty': `Enter a role`,
+        }),
+        status: Joi.string().required().messages({
+            'string.empty': `Enter a role`,
+        }),
+        profileImage: Joi.string().required().messages({
+            'string.empty': 'choose a file',
+        })
+    });
+    const result = await updateSchema.validate(req.body);
+    const { value, error } = result;
+    const valid = error == null;
+    if (valid) {
+        const { details } = error;
+        const message = details.map(i => i.message).join(',');
+        return res.status(httpCodes.UNPROCESSABLE_ENTITY).json({
+            ErrorModel: {
+                errorCode: httpCodes.UNPROCESSABLE_ENTITY,
+                errorMessage: message
+            }
+        });
+    } else {
+        const doesExist = await User.findOne({ email: email, '_id': { $ne: id } })
+        if (doesExist) {
+            console.log(error)
+            return res.status(httpCodes.BAD_REQUEST).json({
+                ErrorModel: {
+                    errorCode: httpCodes.BAD_REQUEST,
+                    errorMessage: "email already exist"
+
+                }
+            });
+        } else {
+            console.log(req.file)
+            if (req.file == undefined) {
+                res.status(400).send(' Error: No File Selected!');
+            } else {
+                req.body.profileImage = `${req.file.filename}`;
+                userData = {
+                    profileImage: req.body.profileImage
+                };
+            }
+
+            const updateData = {
+                firstName: req.body.firstName,
+                lastName: req.body.lastName,
+                email: req.body.email,
+                role: req.body.role,
+                status: req.body.status,
+                profileImage: req.body.profileImage
+            };
+            const update = await User.findByIdAndUpdate(id, { $set: updateData })
+            if (update) {
+                console.log(update);
+                return res.status(httpCodes.OK).json({
+                    data: id,
+                    message: "Successfully updated"
+                });
+            } else {
+                console.log(update);
+                return res.status(httpCodes.INTERNAL_SERVER_ERROR).json({
+                    ErrorModel: {
+                        errorCode: httpCodes.INTERNAL_SERVER_ERROR,
+                        errorMessage: "failed to update"
+                    }
+                });
+            }
+        }
+
+    }
+}
+//delete-user
 
 const remove = async (req, res, next) => {
     exports.remove = remove;
@@ -176,12 +283,12 @@ const remove = async (req, res, next) => {
     }
 }
 
-// //disable-user
-const disableUser = async (req, res, next) => {
-    exports.disableUser = disableUser;
+ //disable-user
+const disable = async (req, res, next) => {
+    exports.disable = disable;
     const id =  req.params.id 
-    const disable = await User.findByIdAndUpdate({ _id: req.params._id }, { active: false })
-    if (disable) {
+    const uDisable = await User.findByIdAndUpdate({ _id: req.params._id }, { active: false })
+    if (uDisable) {
         return res.status((httpCodes.OK).json({
             message
         }))
@@ -203,6 +310,10 @@ const disableUser = async (req, res, next) => {
         }
     }
 }
+
+
+
+
 
 
 //change password

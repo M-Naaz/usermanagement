@@ -92,8 +92,8 @@ const adregister = async (req, res, next) => {
     }
 }
 //login-admin
-const login = async (req, res, next) => {
-    exports.login = login;
+const adlogin = async (req, res, next) => {
+    exports.adlogin = adlogin;
     const { username, password } = req.body;
     const loginSchema = Joi.object().keys({
         username: Joi.string().required().email().messages({
