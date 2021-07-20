@@ -5,27 +5,26 @@ const authenticate = require("../middleware/authenticate")
 const AuthController = require("../controllers/AuthController");
 const adminController = require("../controllers/adminController")
 const singleUpload = upload.single('profileImage');
+
 //user-register
-router.post("/registerUser", [singleUpload], AuthController.register)
+router.post("/register", [singleUpload], AuthController.register)
 //user-login
-router.post("/loginUser", AuthController.login)
+router.post("/login", AuthController.login)
 //user-update
-router.patch("/updateUser/:id", authenticate, singleUpload, AuthController.update)
+router.patch("/update/:id", authenticate, singleUpload, AuthController.update)
 //user-delete
-router.delete("/deleteUser/:id", authenticate, AuthController.remove)
+router.delete("/delete/:id", authenticate, AuthController.remove)
 //user-disable
-router.disableUser("/disableUser/:id", authenticate, AuthController.disable)
-//change-password
-router.patch("/change/:email", authenticate.apply, AuthController.change)
+router.patch("/disable/:id", authenticate, AuthController.disable)
+//change-password-user
+router.patch("/change/:id", authenticate, AuthController.change)
 //admin-register
-router.post("/registerAdmin", adminController.adregister)
+router.post("/registerAdmin", adminController.registerad)
 //admin-login
-router.post("/loginAdmin", adminController.adlogin)
+router.post("/loginAdmin", adminController.loginad)
 //admin-delete
-router.post("/deleteAdmin/", authenticate, adminController.adremove)
+router.delete("/deleteAdmin/:id", authenticate, adminController.removead)
 //admin-disable
-router.post("/disableAdmin/", authenticate, adminController.disableAdmin)
-
-
+router.patch("/disableAdmin/:id", authenticate, adminController.disablead)
 
 module.exports = router

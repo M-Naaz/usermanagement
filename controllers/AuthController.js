@@ -6,14 +6,13 @@ const httpCodes = require("http-status-codes");
 
 
 //registeruser
-
 const register = async (req, res, next) => {
-    exports.register = register;
+
     console.log(req.body)
     console.log(req.file)
     // return true;
-   
-    const { email, firstName, lastName, password, role, status, profileImage } = req.body;
+
+    const { email, firstName, lastName, password, status, profileImage } = req.body;
     /** Validation */
     const registerSchema = Joi.object().keys({
         email: Joi.string().required().email().messages({
@@ -76,15 +75,15 @@ const register = async (req, res, next) => {
                 };
             }
 
-            let hashedPass = await bcrypt.hash(req.body.password, 10);
+            // let hashedPass = await bcrypt.hash(req.body.password, 10);
 
             const user = new User({
                 firstName: req.body.firstName,
                 lastName: req.body.lastName,
                 email: req.body.email,
-                password: hashedPass,
+                password: req.body.password,
                 profileImage: req.body.profileImage,
-
+                status: req.body.status
             });
 
 
@@ -110,7 +109,7 @@ const register = async (req, res, next) => {
 //login-user
 
 const login = async (req, res, next) => {
-    exports.login = login;
+
     const { username, password } = req.body;
     const loginSchema = Joi.object().keys({
         username: Joi.string().required().email().messages({
@@ -136,7 +135,7 @@ const login = async (req, res, next) => {
         });
     } else {
 
-        let verify = await bcrypt.compare(password, user.password);
+        let verify = await User.findOne({ $or: [{ password: password }] });
         if (verify) {
             const token = jwt.sign({ name: user.id }, "verySecretiveValue", { expiresIn: "24hrs" })
             console.log(user);
@@ -162,7 +161,7 @@ const login = async (req, res, next) => {
 //update-user
 
 const update = async (req, res, next) => {
-    exports.update = update;
+
     const {
         email,
         firstName,
@@ -170,7 +169,7 @@ const update = async (req, res, next) => {
         password,
         role,
         status
-        
+
     } = req.body;
     const id = req.params.id
     const updateSchema = Joi.object().keys({
@@ -265,7 +264,7 @@ const update = async (req, res, next) => {
 //delete-user
 
 const remove = async (req, res, next) => {
-    exports.remove = remove;
+
     const id = req.params.id
     const userInfo = await User.findByIdAndDelete(id)
     if (userInfo) {
@@ -283,33 +282,33 @@ const remove = async (req, res, next) => {
     }
 }
 
- //disable-user
+//disable-user
 const disable = async (req, res, next) => {
-    exports.disable = disable;
-    const id =  req.params.id 
-    const uDisable = await User.findByIdAndUpdate({ _id: req.params._id }, { active: false })
-    if (uDisable) {
-        return res.status((httpCodes.OK).json({
-            message
-        }))
-    }
-    else {
-        const disableUser = await User.findByIdAndRemove({ _id: req.params._id })
-        if (disableUser) {
-            return res.status(httpCodes.OK).json({
-                data: disableUser,
-                message: "user disabled Successfully"
-            });
-        } else {
-            return res.status(httpCodes.INTERNAL_SERVER_ERROR).json({
-                ErrorModel: {
-                    errorCode: httpCodes.INTERNAL_SERVER_ERROR,
-                    errorMessage: "unable to disable user"
-                }
-            });
-        }
+
+    const id = req.params.id
+    // const uDisable = await User.findByIdAndUpdate(id, { active: false })
+    // if (uDisable) {
+    //     return res.status((httpCodes.OK).json({
+    //         message
+    //     }))
+    // }
+    // else {
+    const disableUser = await User.findByIdAndRemove(id)
+    if (disableUser) {
+        return res.status(httpCodes.OK).json({
+            data: disableUser,
+            message: "user disabled Successfully"
+        });
+    } else {
+        return res.status(httpCodes.INTERNAL_SERVER_ERROR).json({
+            ErrorModel: {
+                errorCode: httpCodes.INTERNAL_SERVER_ERROR,
+                errorMessage: "unable to disable user"
+            }
+        });
     }
 }
+
 
 
 
@@ -318,39 +317,71 @@ const disable = async (req, res, next) => {
 
 //change password
 const change = async (req, res, next) => {
-    exports.change = change;
-    const session = req.session;
-    if (session.email) {
-        const oldPassword = req.body.oldPassword;
-        const newPassword = req.body.newPassword;
-        const confirmPassword = req.body.confirmPassword;
-        userSchema.findOne({ "email": session.email }, (err, user) => {
-            if (user != null) {
-                const hash = user.password;
-                bcrypt.compare(oldPassword, hash, function (err, res) {
-                    if (res) {
-                        //passwords match
-                        if (newPassword == confirmPassword) {
-                            bcrypt.hash(newPassword, 10, function (err, hash) {
-                                user.password = hash;
-                                user.save(function (err, user) {
-                                    if (err)
-                                        return res.status(httpCodes.OK).json({
-                                            message: "password changed Successfully"
-                                        });
-                                })
-                            })
-                        } else {
-                            return res.status(httpCodes.INTERNAL_SERVER_ERROR).json({
-                                ErrorModel: {
-                                    errorCode: httpCodes.INTERNAL_SERVER_ERROR,
-                                    errorMessage: "unable to change password"
-                                }
-                            });
-                        }
-                    }
-                })
+    const  password  = req.body.password;
+    console.log(req.body.password)
+    const id = req.params.id
+    const changeSchema = Joi.object().keys({
+        password: Joi.string().required().messages({
+            'string.empty': `Password is required`,
+        }),
+    })
+    const result = await changeSchema.validate(req.body);
+   
+    const { value, error } = result;
+    const valid = error == null;
+    if (!valid) {
+        const { details } = error;
+        const message = details.map(i => i.message).join(',');
+        return res.status(httpCodes.UNPROCESSABLE_ENTITY).json({
+            ErrorModel: {
+                errorCode: httpCodes.UNPROCESSABLE_ENTITY,
+                errorMessage: message
             }
-        })
+        });
+   
+        } else {
+        const doesExist = await User.findOne({ password: password, '_id': { $ne: id } })
+        if (doesExist) {
+            console.log(error)
+            return res.status(httpCodes.BAD_REQUEST).json({
+                ErrorModel: {
+                    errorCode: httpCodes.BAD_REQUEST,
+                    errorMessage: "password already exist"
+
+                }
+            });
+         }
+          else {
+        
+        const changePassword = {
+            password: req.body.password
+        }
+        const change = await User.findByIdAndUpdate(id, { $set: changePassword })
+        if (change) {
+            console.log(password);
+
+            return res.status(httpCodes.OK).json({
+                message: "password changed Successfully"
+            });
+        } else {
+            console.log(change);
+            return res.status(httpCodes.INTERNAL_SERVER_ERROR).json({
+                ErrorModel: {
+                    errorCode: httpCodes.INTERNAL_SERVER_ERROR,
+                    errorMessage: "failed to change password"
+                }
+            });
+        }
     }
+
+
 }
+
+}
+
+exports.register = register;
+exports.login = login;
+exports.update = update;
+exports.remove = remove;
+exports.disable = disable;
+exports.change = change;

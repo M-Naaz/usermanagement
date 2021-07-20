@@ -2,7 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const morgan = require("morgan");
 const bodyParser = require("body-parser");
-const passport = require("passport")
+const passport = require("passport");
 const expressSession = require("express-session");
 const Auth0Strategy = require("passport-auth0");
 const AuthRoute = require("./routes/auth");
@@ -21,14 +21,14 @@ app.use(bodyParser.json())
 app.use('/uploads', express.static("uploads"))
 
 
-//session
-const session = {
-  // secret: process.env.SESSION_SECRET,
-  cookie: {},
-  resave: false,
-  saveUninitialized: false
-};
-app.use(expressSession(session));
+// //session
+// const session = {
+//   secret: process.env.SESSION_SECRET,
+//   cookie: {},
+//   resave: false,
+//   saveUninitialized: false
+// };
+// app.use(expressSession(session));
 
 passport.js
 
@@ -60,6 +60,7 @@ app.use("/api", AuthRoute)
 
 
 
+//aggregate
 
 
 

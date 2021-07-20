@@ -6,10 +6,9 @@ const httpCodes = require("http-status-codes");
 
 
 //registeradmin
-const adregister = async (req, res, next) => {
-    exports.adregister = adregister;
-    console.log(req.body)
-    const { email, password, firstName, lastName, role, status } = req.body;
+const registerad = async (req, res, next) => {
+   console.log(req.body)
+    const { email, password, firstName, lastName } = req.body;
     /** Validation */
     const registerSchema = Joi.object().keys({
         email: Joi.string().required().email().messages({
@@ -29,9 +28,7 @@ const adregister = async (req, res, next) => {
         role: Joi.string().required().messages({
             'string.empty': `role is required`,
         }),
-        status: Joi.string().required().messages({
-            'string.empty': `role is required`,
-        }),
+       
 
 
     });
@@ -62,14 +59,16 @@ const adregister = async (req, res, next) => {
         } else {
 
 
-            let hashedPass = await bcrypt.hash(req.body.password, 10);
+            // let hashedPass = await bcrypt.hash(req.body.password, 10);
 
             const admin = new User({
                 firstName: req.body.firstName,
                 lastName: req.body.lastName,
                 email: req.body.email,
-                password: hashedPass,
+                password: req.body.password,
+            
             });
+
 
 
             let createAdmin = await admin.save()
@@ -92,8 +91,8 @@ const adregister = async (req, res, next) => {
     }
 }
 //login-admin
-const adlogin = async (req, res, next) => {
-    exports.adlogin = adlogin;
+const loginad = async (req, res, next) => {
+    
     const { username, password } = req.body;
     const loginSchema = Joi.object().keys({
         username: Joi.string().required().email().messages({
@@ -119,7 +118,7 @@ const adlogin = async (req, res, next) => {
         });
     } else {
 
-        let verify = await bcrypt.compare(password, admin.password);
+        let verify = await User.findOne({ $or: [{ password: password }] });
         if (verify) {
             const token = jwt.sign({ name: admin.id }, "verySecretiveValue", { expiresIn: "24hrs" })
             console.log(admin);
@@ -140,8 +139,8 @@ const adlogin = async (req, res, next) => {
 
 //delete-admin
 
-const adremove = async (req, res, next) => {
-    exports.adremove = adremove;
+const removead = async (req, res, next) => {
+    
     const id = req.params.id
     const adminInfo = await User.findByIdAndDelete(id)
     if (adminInfo) {
@@ -162,17 +161,9 @@ const adremove = async (req, res, next) => {
 }
 
 //disable-admin
-const disableAdmin = async (req, res, next) => {
-    exports.disableAdmin = disableAdmin;
+const disablead = async (req, res, next) => {
     const id =  req.params.id 
-    const disable = await User.findByIdAndUpdate({ _id: req.params._id }, { active: false })
-    if (disable) {
-        return res.status((httpCodes.OK).json({
-            message
-        }))
-    }
-    else {
-        const disableUser = await User.findByIdAndRemove({ _id: req.params._id })
+    const disableUser = await User.findByIdAndRemove(id)
         if (disableUser) {
             return res.status(httpCodes.OK).json({
                 data: disableUser,
@@ -187,9 +178,14 @@ const disableAdmin = async (req, res, next) => {
             });
         }
     }
-}
+
+    //show-non admin
 
 
+exports.registerad = registerad;
+exports.loginad= loginad;
+exports.removead = removead;
+exports.disablead = disablead;
 
 
 
